@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface AdminMenuService {
 
-    MenuDetailResponseDto createMenu(MultipartFile multipartFile, MenuRequestDto menuRequestDto)
+    MenuDetailResponseDto createMenu(MenuRequestDto menuRequestDto)
         throws IOException;
 
     MenuDetailResponseDto updateMenu(Long menuId, final MultipartFile multipartFile, MenuRequestDto menuRequestDto)

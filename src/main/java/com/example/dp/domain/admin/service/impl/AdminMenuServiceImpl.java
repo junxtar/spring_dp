@@ -16,7 +16,6 @@ import com.example.dp.domain.menu.exception.NotFoundMenuException;
 import com.example.dp.domain.menu.repository.MenuRepository;
 import com.example.dp.domain.menucategory.entity.MenuCategory;
 import com.example.dp.domain.menucategory.repository.MenuCategoryRepository;
-import com.example.dp.global.exception.RestApiException;
 import com.example.dp.global.s3.AwsS3Util;
 import com.example.dp.global.s3.AwsS3Util.ImagePath;
 import java.io.IOException;
@@ -38,30 +37,16 @@ public class AdminMenuServiceImpl implements AdminMenuService {
 
     @Transactional
     @Override
-    public MenuDetailResponseDto createMenu(final MultipartFile multipartFile,
-        final MenuRequestDto requestDto) throws IOException {
-
-        String imageName = null;
-
-        if (multipartFile.isEmpty()) {
-            throw new InvalidInputException(MenuErrorCode.NOT_ENTER_IMAGE);
-        }
-
-        try {
+    public MenuDetailResponseDto createMenu(final MenuRequestDto requestDto) {
             if (menuRepository.existsByName(requestDto.getName())) {
                 throw new ExistsMenuNameException(MenuErrorCode.EXISTS_MENU_NAME);
             }
-
-            imageName = awsS3Util.uploadImage(multipartFile, ImagePath.MENU);
-            String imagePath = awsS3Util.getImagePath(imageName, ImagePath.MENU);
 
             Menu menu = Menu.builder()
                 .name(requestDto.getName())
                 .description(requestDto.getDescription())
                 .price(requestDto.getPrice())
                 .quantity(requestDto.getQuantity())
-                .imageName(imageName)
-                .imagePath(imagePath)
                 .status(requestDto.getStatus())
                 .build();
 
@@ -70,12 +55,6 @@ public class AdminMenuServiceImpl implements AdminMenuService {
             addCategory(requestDto.getCategoryNameList(), menu);
 
             return new MenuDetailResponseDto(menu);
-        } catch (RestApiException e) {
-            if (imageName != null) {
-                awsS3Util.deleteImage(imageName, ImagePath.MENU);
-            }
-            throw e;
-        }
     }
 
     @Override
@@ -105,15 +84,12 @@ public class AdminMenuServiceImpl implements AdminMenuService {
         String imagePath = awsS3Util.getImagePath(imageName, ImagePath.MENU);
 
         // 오류 없이 진행 됐을 경우 기존에 있던 이미지를 삭제함
-        String menuImageName = menu.getImageName();
-        if (menuImageName != null) {
-            awsS3Util.deleteImage(menuImageName, ImagePath.MENU);
-        }
+
 
         // 업데이트 진행
         menu.update(menuRequestDto.getName(),
             menuRequestDto.getDescription(), menuRequestDto.getPrice(),
-            menuRequestDto.getQuantity(), menuRequestDto.getStatus(), imageName, imagePath);
+            menuRequestDto.getQuantity(), menuRequestDto.getStatus());
 
         return new MenuDetailResponseDto(menu);
     }
@@ -142,7 +118,6 @@ public class AdminMenuServiceImpl implements AdminMenuService {
     @Override
     public void deleteMenu(final Long menuId) {
         Menu menu = findMenu(menuId);
-        awsS3Util.deleteImage(menu.getImageName(), ImagePath.MENU);
         menuRepository.delete(menu);
     }
 
