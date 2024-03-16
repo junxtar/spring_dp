@@ -23,7 +23,7 @@ public class OrderController {
 
     private final OrderServiceImpl orderService;
 
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<OrderResponseDto> createOrders(
         @AuthenticationPrincipal UserDetailsImpl userDetailsImpl
     ) {
@@ -44,8 +44,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
-    @GetMapping("")
-
+    @GetMapping
     public ResponseEntity<List<OrderResponseDto>> getOrder(
         @AuthenticationPrincipal UserDetailsImpl userDetailsImpl
     ) {

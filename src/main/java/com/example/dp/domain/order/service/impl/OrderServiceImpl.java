@@ -20,8 +20,8 @@ import com.example.dp.domain.order.repository.OrderRepository;
 import com.example.dp.domain.order.service.OrderService;
 import com.example.dp.domain.ordermenu.entity.OrderMenu;
 import com.example.dp.domain.ordermenu.repository.OrderMenuRepository;
-import com.example.dp.domain.user.entity.UserRole;
 import com.example.dp.domain.user.entity.User;
+import com.example.dp.domain.user.entity.UserRole;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponseDto createOrder(final User user) {
+    public OrderResponseDto createOrder(User user) {
         List<Cart> cartList = cartRepository.findByUser(user);
 
         if (cartList.isEmpty()) {
@@ -70,15 +70,13 @@ public class OrderServiceImpl implements OrderService {
             orderMenu.getMenu().subQuantity(orderMenu.getMenuCounts());
         }
 
-        orderRepository.save(order);
+        Order save = orderRepository.save(order);
         orderMenuRepository.saveAll(orderMenuList);
 
         //장바구니 내역 삭제
         cartService.deleteCart(user);
 
-        return new OrderResponseDto(order);
-
-
+        return new OrderResponseDto(save);
     }
 
     @Override

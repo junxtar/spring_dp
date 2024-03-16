@@ -59,7 +59,8 @@ public class User extends TimeEntity {
     private List<Review> reviews = new ArrayList<>();
 
     @Builder
-    private User(String username, String email, String password, UserRole role) {
+    private User(Long id, String username, String email, String password, UserRole role) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;

@@ -25,7 +25,8 @@ public class Category {
     private String type;
 
     @Builder
-    private Category(String type) {
+    private Category(Long id, String type) {
+        this.id = id;
         this.type = type;
     }
 
