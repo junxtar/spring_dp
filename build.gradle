@@ -75,6 +75,8 @@ dependencies {
 	testImplementation 'com.navercorp.fixturemonkey:fixture-monkey-starter:1.0.4'
 	testImplementation 'com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation:1.0.4'
 	testImplementation 'it.ozimov:embedded-redis:0.7.3'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
