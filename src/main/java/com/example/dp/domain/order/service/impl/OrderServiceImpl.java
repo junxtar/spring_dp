@@ -1,10 +1,12 @@
 package com.example.dp.domain.order.service.impl;
 
+import static com.example.dp.domain.menu.exception.MenuErrorCode.NOT_FOUND_MENU;
+import static com.example.dp.domain.order.exception.OrderErrorCode.FORBIDDEN_ORDER_QUANTITY;
+
 import com.example.dp.domain.cart.entity.Cart;
 import com.example.dp.domain.cart.repository.CartRepository;
 import com.example.dp.domain.cart.service.impl.CartServiceImpl;
 import com.example.dp.domain.menu.entity.Menu;
-import com.example.dp.domain.menu.exception.MenuErrorCode;
 import com.example.dp.domain.menu.exception.NotFoundMenuException;
 import com.example.dp.domain.menu.repository.MenuRepository;
 import com.example.dp.domain.order.dto.response.OrderResponseDto;
@@ -22,6 +24,7 @@ import com.example.dp.domain.ordermenu.entity.OrderMenu;
 import com.example.dp.domain.ordermenu.repository.OrderMenuRepository;
 import com.example.dp.domain.user.entity.User;
 import com.example.dp.domain.user.entity.UserRole;
+import com.example.dp.global.exception.RestApiException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,14 +50,27 @@ public class OrderServiceImpl implements OrderService {
             throw new NotFoundCartListForOrderException(
                 OrderErrorCode.NOT_FOUND_CARTLIST_FOR_ORDER);
         }
-        Order order = Order.builder()
+
+        //수량 체크
+        for (Cart cart : cartList) {
+            Menu menu = menuRepository.findByIdWithPessimisticLock(cart.getMenu().getId())
+                .orElseThrow(() -> new RestApiException(
+                    NOT_FOUND_MENU));
+            if (cart.getMenuCount() > menu.getQuantity()) {
+                throw new ForbiddenOrderQuantity(FORBIDDEN_ORDER_QUANTITY);
+            }
+            menu.subQuantity(cart.getMenuCount());
+        }
+
+        Order order = orderRepository.save(Order.builder()
             .user(user)
             .state(OrderState.PENDING)
-            .build();
+            .build());
 
         List<OrderMenu> orderMenuList = cartList.stream()
             .map(cart -> {
-                    OrderMenu orderMenu = new OrderMenu(order, cart.getMenu(),cart.getMenuCount(),cart.getTotalPrice());
+                    OrderMenu orderMenu = new OrderMenu(order, cart.getMenu(), cart.getMenuCount(),
+                        cart.getTotalPrice());
                     order.addOrderMenuList(orderMenu);
                     cart.getMenu().addOrderMenu(orderMenu);
                     return orderMenu;
@@ -62,21 +78,12 @@ public class OrderServiceImpl implements OrderService {
             )
             .toList();
 
-        //수량 체크
-        for(OrderMenu orderMenu : orderMenuList){
-            if(orderMenu.getMenuCounts() > orderMenu.getMenu().getQuantity()){
-                throw new ForbiddenOrderQuantity(OrderErrorCode.FORBIDDEN_ORDER_QUANTITY);
-            }
-            orderMenu.getMenu().subQuantity(orderMenu.getMenuCounts());
-        }
-
-        Order save = orderRepository.save(order);
         orderMenuRepository.saveAll(orderMenuList);
 
         //장바구니 내역 삭제
         cartService.deleteCart(user);
 
-        return new OrderResponseDto(save);
+        return new OrderResponseDto(order);
     }
 
     @Override
@@ -86,10 +93,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new NotFoundOrderException(OrderErrorCode.NOT_FOUND_ORDER));
 
-
-        if(!order.getUser().getId().equals(user.getId())){ // 주문을 한 사용자가 아니고
-            if(!user.getRole().equals(UserRole.ADMIN)){ //사용자가 관리자가 아닌경우
-                throw new ForbiddenDeleteOrderRoleExcepiton(OrderErrorCode.FORBIDDEN_DELETE_ORDER_ROLE);
+        if (!order.getUser().getId().equals(user.getId())) { // 주문을 한 사용자가 아니고
+            if (!user.getRole().equals(UserRole.ADMIN)) { //사용자가 관리자가 아닌경우
+                throw new ForbiddenDeleteOrderRoleExcepiton(
+                    OrderErrorCode.FORBIDDEN_DELETE_ORDER_ROLE);
             }
         }
 
@@ -100,15 +107,14 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
 
             orderMenus.forEach(orderMenu -> {
-                    Menu menu = menuRepository.findById(orderMenu.getOrder().getId())
-                        .orElseThrow(() -> new NotFoundMenuException(
-                            MenuErrorCode.NOT_FOUND_MENU));
-                    menu.addQuantity(orderMenu.getMenuCounts());
-                });
-        }
-
-        else{
-            throw new ForbiddenOrderStateNotPending(OrderErrorCode.FORBIDDEN_ORDER_STATE_NOT_PENDING);
+                Menu menu = menuRepository.findById(orderMenu.getOrder().getId())
+                    .orElseThrow(() -> new NotFoundMenuException(
+                        NOT_FOUND_MENU));
+                menu.addQuantity(orderMenu.getMenuCounts());
+            });
+        } else {
+            throw new ForbiddenOrderStateNotPending(
+                OrderErrorCode.FORBIDDEN_ORDER_STATE_NOT_PENDING);
         }
     }
 
