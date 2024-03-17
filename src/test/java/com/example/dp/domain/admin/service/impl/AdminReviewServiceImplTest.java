@@ -13,7 +13,6 @@ import com.example.dp.domain.review.repository.ReviewRepository;
 import com.example.dp.domain.user.entity.User;
 import com.example.dp.domain.user.repository.UserRepository;
 import com.navercorp.fixturemonkey.FixtureMonkey;
-import com.navercorp.fixturemonkey.api.introspector.BuilderArbitraryIntrospector;
 import com.navercorp.fixturemonkey.api.introspector.FieldReflectionArbitraryIntrospector;
 import com.navercorp.fixturemonkey.jakarta.validation.plugin.JakartaValidationPlugin;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-@Transactional
 @SpringBootTest
 class AdminReviewServiceImplTest {
 

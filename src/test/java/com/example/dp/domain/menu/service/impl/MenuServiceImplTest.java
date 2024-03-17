@@ -12,8 +12,8 @@ import com.example.dp.domain.menucategory.entity.MenuCategory;
 import com.example.dp.domain.menucategory.repository.MenuCategoryRepository;
 import com.example.dp.domain.menulike.entity.MenuLike;
 import com.example.dp.domain.menulike.repository.MenuLikeRepository;
-import com.example.dp.domain.user.entity.UserRole;
 import com.example.dp.domain.user.entity.User;
+import com.example.dp.domain.user.entity.UserRole;
 import com.example.dp.domain.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
-@Transactional
 @SpringBootTest
 @Disabled
 class MenuServiceImplTest {
